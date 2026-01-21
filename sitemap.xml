@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="[http://www.sitemaps.org/schemas/sitemap/0.9](http://www.sitemaps.org/schemas/sitemap/0.9)">
+  <url>
+    <loc>[https://hydeyasu9-cpu.github.io/bbs-spi/index.html](https://hydeyasu9-cpu.github.io/bbs-spi/index.html)</loc>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>[https://hydeyasu9-cpu.github.io/bbs-spi/board/fortune/index.html](https://hydeyasu9-cpu.github.io/bbs-spi/board/fortune/index.html)</loc>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>[https://hydeyasu9-cpu.github.io/bbs-spi/board/fortune/1700000000.html](https://hydeyasu9-cpu.github.io/bbs-spi/board/fortune/1700000000.html)</loc>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>[https://hydeyasu9-cpu.github.io/bbs-spi/board/fortune/pot_refund.html](https://hydeyasu9-cpu.github.io/bbs-spi/board/fortune/pot_refund.html)</loc>
+    <priority>0.8</priority>
+  </url>
+</urlset>
