@@ -1,2 +1,3 @@
-User-agent: * Allow: /
-Sitemap: https://www.google.com/search?q=https://your-domain.com/sitemap.xml
+User-agent: *
+Allow: /
+Sitemap: https://hydeyasu9-cpu.github.io/bbs-spi/sitemap.xml
