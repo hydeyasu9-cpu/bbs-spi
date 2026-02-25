@@ -28,6 +28,8 @@
       padding:18px;
       box-sizing:border-box;
     }
+
+    /* 動画ステージ */
     .stage{
       position:relative;
       border-radius:16px;
@@ -35,13 +37,17 @@
       background:#000;
       border:1px solid var(--line);
     }
+    .stage.hidden{ display:none; }
+
     video{
       display:block;
       width:100%;
       height:auto;
-      max-height:78vh;
+      max-height:86vh;
       background:#000;
     }
+
+    /* 自動再生が失敗したときの再生ボタン */
     .overlay{
       position:absolute;
       inset:0;
@@ -73,26 +79,28 @@
       max-width:520px;
     }
 
-    .pw{
-      margin-top:14px;
-      padding:14px;
+    /* パスワード画面（最初は非表示） */
+    .pw-screen{
+      display:none;
       border-radius:16px;
       border:1px solid var(--line);
       background:var(--panel);
-      display:grid;
-      gap:10px;
-      opacity:.45;
-      pointer-events:none;
-      transition:opacity .5s ease;
+      padding:18px;
+      box-sizing:border-box;
     }
-    .pw.enabled{
-      opacity:1;
-      pointer-events:auto;
+    .pw-screen.show{ display:block; }
+
+    .title{
+      font-weight:900;
+      letter-spacing:.04em;
+      margin:0 0 10px;
+      font-size:18px;
     }
     .row{
       display:flex;
       gap:10px;
       flex-wrap:wrap;
+      margin-top:10px;
     }
     input{
       flex:1;
@@ -112,7 +120,7 @@
       border-radius:14px;
       padding:14px 16px;
       font-size:16px;
-      font-weight:800;
+      font-weight:900;
       background:#00c853;
       color:#06230f;
       min-width:120px;
@@ -121,23 +129,25 @@
       min-height:18px;
       font-size:13px;
       color:var(--warn);
+      margin-top:8px;
     }
     .hint{
       font-size:12px;
       color:var(--muted);
       line-height:1.5;
+      margin-top:6px;
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="stage">
+    <!-- 1) 初期表示は動画だけ -->
+    <div class="stage" id="videoStage">
       <video id="introVideo" autoplay muted playsinline preload="auto">
-        <!-- ゲートは board/fortune/ 配下なので assets へは ../../assets/ -->
         <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
       </video>
 
-      <!-- 自動再生が失敗した時だけ表示（ユーザー操作で再生させる） -->
+      <!-- 自動再生失敗時のみ出す -->
       <div class="overlay hidden" id="playOverlay">
         <button class="btn" id="playBtn">▶ 動画を再生</button>
         <div class="sub">
@@ -147,15 +157,16 @@
       </div>
     </div>
 
-    <div class="pw" id="pwBlock">
-      <div class="msg" id="msg"></div>
+    <!-- 2) 動画終了後に表示するパスワード画面（最初は非表示） -->
+    <div class="pw-screen" id="pwScreen">
+      <h1 class="title">認証</h1>
+      <div class="hint">パスワードを入力してください。</div>
+
       <div class="row">
-        <input id="pwInput" type="password" placeholder="パスワードを入力" autocomplete="off" />
+        <input id="pwInput" type="password" placeholder="パスワード" autocomplete="off" />
         <button class="go" id="goBtn">進む</button>
       </div>
-      <div class="hint">
-        動画が最後まで再生されると入力が有効になります。
-      </div>
+      <div class="msg" id="msg"></div>
     </div>
   </div>
 
@@ -163,16 +174,16 @@
   // ===== 設定 =====
   const TARGET_URL = "./1700000000.html";
 
-  // パスワード: 4649 の SHA-256（hex）
   // sha256("4649") = 69aa50d0821a77410478ef06b174193c892c210509e13aeec8a8ae6a0225b42a
   const PASSWORD_SHA256_HEX = "69aa50d0821a77410478ef06b174193c892c210509e13aeec8a8ae6a0225b42a";
 
   // ===== DOM =====
+  const videoStage = document.getElementById("videoStage");
   const video = document.getElementById("introVideo");
   const overlay = document.getElementById("playOverlay");
   const playBtn = document.getElementById("playBtn");
 
-  const pwBlock = document.getElementById("pwBlock");
+  const pwScreen = document.getElementById("pwScreen");
   const pwInput = document.getElementById("pwInput");
   const goBtn = document.getElementById("goBtn");
   const msg = document.getElementById("msg");
@@ -189,25 +200,32 @@
     return toHex(hash);
   }
 
-  // ===== 動画 → パスワード解放 =====
-  function enablePassword() {
-    pwBlock.classList.add("enabled");
-    msg.textContent = "パスワードを入力してください。";
+  // ===== 画面切替 =====
+  function showPasswordScreen() {
+    // 動画を完全に消す
+    video.pause();
+    // iOS対策でsrcを外して開放（任意だが安全）
+    video.removeAttribute("src");
+    while (video.firstChild) video.removeChild(video.firstChild);
+
+    videoStage.classList.add("hidden");   // 動画UIを消す
+    pwScreen.classList.add("show");       // パスワードUIを出す
     pwInput.focus();
   }
 
-  video.addEventListener("ended", enablePassword);
+  // 動画終了で切り替え
+  video.addEventListener("ended", showPasswordScreen);
 
   // 自動再生が失敗したら再生ボタンを出す
   (async () => {
     try {
-      // autoplay属性があっても失敗するブラウザがあるので明示的に試す
       await video.play();
     } catch (e) {
       overlay.classList.remove("hidden");
     }
   })();
 
+  // 再生ボタン
   playBtn.addEventListener("click", async () => {
     overlay.classList.add("hidden");
     try {
@@ -220,15 +238,9 @@
   // ===== パスワード判定 =====
   async function checkAndGo() {
     msg.textContent = "";
-    if (!pwBlock.classList.contains("enabled")) {
-      msg.textContent = "動画を最後まで再生してください。";
-      return;
-    }
     const pw = pwInput.value ?? "";
-    if (!pw) {
-      msg.textContent = "パスワードが空です。";
-      return;
-    }
+    if (!pw) { msg.textContent = "パスワードが空です。"; return; }
+
     const hex = await sha256Hex(pw);
     if (hex === PASSWORD_SHA256_HEX) {
       location.href = TARGET_URL;
