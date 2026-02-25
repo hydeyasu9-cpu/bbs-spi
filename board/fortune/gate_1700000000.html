@@ -1,342 +1,237 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Access Gate</title>
-  <style>
-    :root{
-      --bg:#000;
-      --panel:rgba(255,255,255,.06);
-      --line:rgba(255,255,255,.14);
-      --muted:rgba(255,255,255,.65);
-      --warn:#ffb74d;
-      --accent:#2b90ff;
-      --fade:260ms;
-    }
-    body{
-      margin:0;
-      background:var(--bg);
-      color:#fff;
-      font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
-      min-height:100vh;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-    .wrap{
-      width:min(920px, 100%);
-      padding:18px;
-      box-sizing:border-box;
-    }
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Access</title>
+<style>
+:root{
+  --bg:#000;
+  --panel:rgba(255,255,255,.06);
+  --line:rgba(255,255,255,.14);
+  --warn:#ffb74d;
+  --accent:#2b90ff;
+  --fade:260ms;
+}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#fff;
+  font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.wrap{
+  width:min(920px,100%);
+  padding:18px;
+  box-sizing:border-box;
+}
 
-    /* パスワード画面（最初から表示） */
-    .pw-screen{
-      border-radius:16px;
-      border:1px solid var(--line);
-      background:var(--panel);
-      padding:18px;
-      box-sizing:border-box;
-    }
-    .title{
-      font-weight:900;
-      letter-spacing:.04em;
-      margin:0 0 10px;
-      font-size:18px;
-    }
-    .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:10px;
-    }
-    input{
-      flex:1;
-      min-width:220px;
-      box-sizing:border-box;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.18);
-      background:rgba(0,0,0,.35);
-      color:#fff;
-      padding:14px 12px;
-      font-size:16px;
-      outline:none;
-    }
-    .go{
-      border:none;
-      cursor:pointer;
-      border-radius:14px;
-      padding:14px 16px;
-      font-size:16px;
-      font-weight:900;
-      background:#00c853;
-      color:#06230f;
-      min-width:120px;
-    }
-    .locked{
-      opacity:.45;
-      pointer-events:none;
-    }
-    .msg{
-      min-height:18px;
-      font-size:13px;
-      color:var(--warn);
-      margin-top:8px;
-    }
-    .hint{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.5;
-      margin-top:6px;
-    }
+/* パスワード画面 */
+.pw-screen{
+  border-radius:16px;
+  border:1px solid var(--line);
+  background:var(--panel);
+  padding:18px;
+}
+.pw-screen.hidden{ display:none; }
 
-    /* 動画ステージ（最初は非表示） */
-    .stage{
-      margin-top:14px;
-      position:relative;
-      border-radius:16px;
-      overflow:hidden;
-      background:#000;
-      border:1px solid var(--line);
-      display:none;
-    }
-    .stage.show{ display:block; }
+.row{
+  display:flex;
+  gap:10px;
+}
+input{
+  flex:1;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(0,0,0,.35);
+  color:#fff;
+  padding:14px;
+  font-size:16px;
+}
+.go{
+  border:none;
+  border-radius:14px;
+  padding:14px 16px;
+  font-weight:900;
+  background:#00c853;
+  color:#06230f;
+}
+.locked{
+  opacity:.4;
+  pointer-events:none;
+}
+.msg{
+  margin-top:10px;
+  font-size:13px;
+  color:var(--warn);
+}
 
-    video{
-      display:block;
-      width:100%;
-      height:auto;
-      max-height:70vh;
-      background:#000;
-    }
+/* 動画 */
+.stage{
+  display:none;
+  margin-top:12px;
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid var(--line);
+}
+.stage.show{ display:block; }
 
-    /* 自動再生が失敗したときの再生ボタン */
-    .overlay{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      background:linear-gradient(to bottom, rgba(0,0,0,.35), rgba(0,0,0,.65));
-      gap:12px;
-      flex-direction:column;
-      padding:18px;
-      text-align:center;
-    }
-    .overlay.hidden{ display:none; }
-    .btn{
-      border:none;
-      cursor:pointer;
-      border-radius:14px;
-      padding:14px 16px;
-      font-size:16px;
-      font-weight:900;
-      background:var(--accent);
-      color:#071a2f;
-      min-width:220px;
-    }
-    .sub{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.5;
-      max-width:520px;
-    }
+video{
+  width:100%;
+  max-height:80vh;
+  background:#000;
+}
 
-    /* ブラックアウト */
-    .blackout{
-      position:fixed;
-      inset:0;
-      background:#000;
-      opacity:0;
-      pointer-events:none;
-      transition: opacity var(--fade) ease;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-    }
-    .blackout.show{
-      opacity:1;
-      pointer-events:auto;
-    }
-    .blackout .label{
-      color:rgba(255,255,255,.55);
-      font-size:12px;
-      letter-spacing:.14em;
-      user-select:none;
-    }
-  </style>
+/* 再生ボタン */
+.overlay{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.75);
+}
+.overlay.hidden{ display:none; }
+
+.btn{
+  border:none;
+  border-radius:14px;
+  padding:14px 18px;
+  font-size:16px;
+  font-weight:900;
+  background:var(--accent);
+  color:#071a2f;
+}
+
+/* ブラックアウト */
+.blackout{
+  position:fixed;
+  inset:0;
+  background:#000;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity var(--fade) ease;
+  z-index:9999;
+}
+.blackout.show{
+  opacity:1;
+  pointer-events:auto;
+}
+</style>
 </head>
 <body>
-  <div class="blackout" id="blackout">
-    <div class="label">LOADING</div>
+
+<div class="blackout" id="blackout"></div>
+
+<div class="wrap">
+
+  <!-- 初期：パスワード画面のみ -->
+  <div class="pw-screen" id="pwScreen">
+    <div class="row locked" id="pwRow">
+      <input id="pwInput" type="password" placeholder="パスワード">
+      <button class="go" id="goBtn">進む</button>
+    </div>
+    <div class="msg" id="msg"></div>
   </div>
 
-  <div class="wrap">
-    <!-- 初期：パスワード画面が表示（ただしロック） -->
-    <div class="pw-screen" id="pwScreen">
-      <h1 class="title">認証</h1>
-      <div class="hint" id="statusHint">準備中…</div>
-
-      <div class="row locked" id="pwRow">
-        <input id="pwInput" type="password" placeholder="パスワード" autocomplete="off" />
-        <button class="go" id="goBtn">進む</button>
-      </div>
-
-      <div class="msg" id="msg"></div>
-      <div class="hint">
-        動画が再生され、終了したら入力できるようになります。
-      </div>
-    </div>
-
-    <!-- 5秒後に表示して再生 -->
-    <div class="stage" id="videoStage">
-      <video id="introVideo" autoplay muted playsinline preload="auto">
-        <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
-      </video>
-
-      <div class="overlay hidden" id="playOverlay">
-        <button class="btn" id="playBtn">▶ 動画を再生</button>
-        <div class="sub">
-          ※ブラウザの仕様で自動再生がブロックされる場合があります。<br>
-          その場合はこのボタンで再生できます。
-        </div>
-      </div>
+  <!-- 動画 -->
+  <div class="stage" id="videoStage">
+    <video id="introVideo" playsinline preload="auto">
+      <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
+    </video>
+    <div class="overlay hidden" id="playOverlay">
+      <button class="btn" id="playBtn">▶ 再生</button>
     </div>
   </div>
+
+</div>
 
 <script>
-  // ===== 設定 =====
-  const TARGET_URL = "./1700000000.html";
-  const PASSWORD_SHA256_HEX = "69aa50d0821a77410478ef06b174193c892c210509e13aeec8a8ae6a0225b42a"; // 4649
-  const INITIAL_WAIT_MS = 5000;  // 最初にパスワード画面を見せる時間
-  const BLACKOUT_MS = 2000;      // ブラックアウト時間
+const TARGET_URL="./1700000000.html";
+const PASSWORD_HASH="69aa50d0821a77410478ef06b174193c892c210509e13aeec8a8ae6a0225b42a"; //4649
 
-  // ===== DOM =====
-  const blackout = document.getElementById("blackout");
+const INITIAL_WAIT=10000;
+const BLACKOUT_TIME=2000;
 
-  const statusHint = document.getElementById("statusHint");
-  const pwRow = document.getElementById("pwRow");
-  const pwInput = document.getElementById("pwInput");
-  const goBtn = document.getElementById("goBtn");
-  const msg = document.getElementById("msg");
+const blackout=document.getElementById("blackout");
+const pwScreen=document.getElementById("pwScreen");
+const pwRow=document.getElementById("pwRow");
+const pwInput=document.getElementById("pwInput");
+const goBtn=document.getElementById("goBtn");
+const msg=document.getElementById("msg");
 
-  const videoStage = document.getElementById("videoStage");
-  const video = document.getElementById("introVideo");
-  const overlay = document.getElementById("playOverlay");
-  const playBtn = document.getElementById("playBtn");
+const videoStage=document.getElementById("videoStage");
+const video=document.getElementById("introVideo");
+const overlay=document.getElementById("playOverlay");
+const playBtn=document.getElementById("playBtn");
 
-  // ===== utils =====
-  const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-  function blackoutOn(){ blackout.classList.add("show"); }
-  async function blackoutOff(){
-    blackout.classList.remove("show");
-    await sleep(260);
+function blackoutOn(){blackout.classList.add("show")}
+async function blackoutOff(){blackout.classList.remove("show");await sleep(260)}
+
+function unlock(){pwRow.classList.remove("locked");pwInput.focus()}
+function lock(){pwRow.classList.add("locked")}
+
+async function start(){
+  lock();
+  await sleep(INITIAL_WAIT);
+
+  blackoutOn();
+  await sleep(BLACKOUT_TIME);
+
+  pwScreen.classList.add("hidden");
+  videoStage.classList.add("show");
+
+  try{
+    await video.play();
+  }catch(e){
+    overlay.classList.remove("hidden");
   }
 
-  function lockPasswordUI(text){
-    statusHint.textContent = text;
-    pwRow.classList.add("locked");
-    msg.textContent = "";
-  }
-  function unlockPasswordUI(text){
-    statusHint.textContent = text;
-    pwRow.classList.remove("locked");
-    pwInput.focus();
-  }
+  await blackoutOff();
+}
 
-  // ===== sha256 =====
-  function toHex(buffer) {
-    const bytes = new Uint8Array(buffer);
-    return Array.from(bytes, b => b.toString(16).padStart(2, "0")).join("");
-  }
-  async function sha256Hex(text) {
-    const enc = new TextEncoder();
-    const data = enc.encode(text);
-    const hash = await crypto.subtle.digest("SHA-256", data);
-    return toHex(hash);
-  }
+playBtn.addEventListener("click",async()=>{
+  overlay.classList.add("hidden");
+  await video.play();
+});
 
-  // ===== flow =====
-  async function startFlow(){
-    // 初期：入力はロック
-    lockPasswordUI("準備中…");
+video.addEventListener("ended",async()=>{
+  blackoutOn();
+  await sleep(BLACKOUT_TIME);
 
-    // 5秒待つ（パスワード画面を見せる）
-    await sleep(INITIAL_WAIT_MS);
+  videoStage.classList.remove("show");
+  pwScreen.classList.remove("hidden");
+  unlock();
 
-    // ブラックアウト → 動画表示＆再生開始
-    blackoutOn();
-    await sleep(BLACKOUT_MS);
+  await blackoutOff();
+});
 
-    videoStage.classList.add("show");
+async function sha256(t){
+  const e=new TextEncoder();
+  const d=e.encode(t);
+  const h=await crypto.subtle.digest("SHA-256",d);
+  return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");
+}
 
-    // 自動再生を試す（失敗したら再生ボタンを出す）
-    try {
-      await video.play();
-      overlay.classList.add("hidden");
-    } catch (e) {
-      overlay.classList.remove("hidden");
-    }
+async function check(){
+  if(pwRow.classList.contains("locked")) return;
+  const val=pwInput.value;
+  if(!val) return;
+  const hex=await sha256(val);
+  if(hex===PASSWORD_HASH) location.href=TARGET_URL;
+  else{msg.textContent="×";pwInput.select();}
+}
 
-    await blackoutOff();
-  }
+goBtn.addEventListener("click",check);
+pwInput.addEventListener("keydown",e=>{if(e.key==="Enter")check()});
 
-  // 動画終了：ブラックアウト → 動画消す → 入力解放 → ブラックアウト解除
-  video.addEventListener("ended", async () => {
-    blackoutOn();
-    await sleep(BLACKOUT_MS);
-
-    // 動画を消す（iOS対策含む）
-    video.pause();
-    video.removeAttribute("src");
-    while (video.firstChild) video.removeChild(video.firstChild);
-    videoStage.classList.remove("show");
-
-    unlockPasswordUI("パスワードを入力してください。");
-    await blackoutOff();
-  });
-
-  playBtn.addEventListener("click", async () => {
-    overlay.classList.add("hidden");
-    try {
-      await video.play();
-    } catch (e) {
-      overlay.classList.remove("hidden");
-    }
-  });
-
-  // ===== password check =====
-  async function checkAndGo(){
-    msg.textContent = "";
-    if(!pwRow || !pwRow.classList) return;
-
-    // ロック中は弾く
-    if (pwRow.classList.contains("locked")) {
-      msg.textContent = "動画が終わるまで入力できません。";
-      return;
-    }
-
-    const pw = pwInput.value ?? "";
-    if (!pw) { msg.textContent = "パスワードが空です。"; return; }
-
-    const hex = await sha256Hex(pw);
-    if (hex === PASSWORD_SHA256_HEX) {
-      location.href = TARGET_URL;
-    } else {
-      msg.textContent = "パスワードが違います。";
-      pwInput.select();
-    }
-  }
-
-  goBtn.addEventListener("click", checkAndGo);
-  pwInput.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") checkAndGo();
-  });
-
-  // 起動
-  startFlow();
+start();
 </script>
+
 </body>
 </html>
