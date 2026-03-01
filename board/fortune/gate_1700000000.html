@@ -35,19 +35,8 @@ body{
   margin:16px auto;
 }
 
-.header{
-  border:1px solid var(--line);
-  background:var(--panel);
-  padding:10px 12px;
-}
-.header .site{
-  font-weight:700;
-}
-.header .meta{
-  color:var(--muted);
-  font-size:12px;
-  margin-top:2px;
-}
+/* 汎用：完全非表示（動画中にPWを消すのに使う） */
+.hidden{ display:none !important; }
 
 .panel{
   margin-top:10px;
@@ -139,7 +128,7 @@ video{
   background:#000;
 }
 
-/* 再生オーバーレイ（2chっぽく簡素に） */
+/* 再生オーバーレイ（簡素） */
 .overlay{
   position:absolute;
   inset:0;
@@ -161,6 +150,9 @@ video{
   cursor:pointer;
 }
 
+.hr{ border-top:1px solid var(--line); margin:10px 0; }
+.small{ font-size:12px; color:var(--muted); }
+
 /* ブラックアウト（演出は維持） */
 .blackout{
   position:fixed;
@@ -175,11 +167,6 @@ video{
   opacity:1;
   pointer-events:auto;
 }
-
-/* 2chっぽい小ネタ */
-.a{ color:var(--link); text-decoration:underline; cursor:pointer; }
-.hr{ border-top:1px solid var(--line); margin:10px 0; }
-.small{ font-size:12px; color:var(--muted); }
 </style>
 </head>
 <body>
@@ -188,17 +175,12 @@ video{
 
 <div class="wrap">
 
-  <div class="header">
-    <div class="site">なんでも実況J（仮）</div>
-    <div class="meta">※この画面は演出用です / ﾏﾀｰﾘ進行</div>
-  </div>
-
   <!-- 初期：パスワード画面のみ -->
   <div class="panel pw-screen" id="pwScreen">
     <div class="panel-hd">Access</div>
     <div class="panel-bd">
       <div class="notice">
-        <div class="title">パスワード入力</div>
+        <div class="title">入力</div>
         <div class="desc">
           「ワイ氏、超絶大凶と占われるも無事にラッキーアイテムを手に入れて無双www」のスレを閲覧するためにはパスワードを入力してください。
         </div>
@@ -213,13 +195,12 @@ video{
       </div>
 
       <div class="msg" id="msg"></div>
-      <div class="small">ヒント：半角数字4桁</div>
     </div>
   </div>
 
   <!-- 動画 -->
   <div class="stage" id="videoStage">
-    <div class="panel-hd">スレ読み込み中…</div>
+    <div class="panel-hd"></div>
     <div class="stage-inner">
       <video id="introVideo" playsinline preload="auto">
         <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
@@ -253,11 +234,11 @@ const playBtn=document.getElementById("playBtn");
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
-function blackoutOn(){blackout.classList.add("show")}
-async function blackoutOff(){blackout.classList.remove("show");await sleep(260)}
+function blackoutOn(){ blackout.classList.add("show"); }
+async function blackoutOff(){ blackout.classList.remove("show"); await sleep(260); }
 
-function unlock(){pwRow.classList.remove("locked");pwInput.focus()}
-function lock(){pwRow.classList.add("locked")}
+function unlock(){ pwRow.classList.remove("locked"); pwInput.focus(); }
+function lock(){ pwRow.classList.add("locked"); }
 
 async function start(){
   lock();
@@ -266,6 +247,7 @@ async function start(){
   blackoutOn();
   await sleep(BLACKOUT_TIME);
 
+  // 動画開始時：PW画面は完全に消す（同居させない）
   pwScreen.classList.add("hidden");
   videoStage.classList.add("show");
 
@@ -278,12 +260,12 @@ async function start(){
   await blackoutOff();
 }
 
-playBtn.addEventListener("click",async()=>{
+playBtn.addEventListener("click", async ()=>{
   overlay.classList.add("hidden");
   await video.play();
 });
 
-video.addEventListener("ended",async()=>{
+video.addEventListener("ended", async ()=>{
   blackoutOn();
   await sleep(BLACKOUT_TIME);
 
@@ -297,7 +279,7 @@ video.addEventListener("ended",async()=>{
 async function sha256(t){
   const e=new TextEncoder();
   const d=e.encode(t);
-  const h=await crypto.subtle.digest("SHA-256",d);
+  const h=await crypto.subtle.digest("SHA-256", d);
   return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,"0")).join("");
 }
 
@@ -305,16 +287,18 @@ async function check(){
   if(pwRow.classList.contains("locked")) return;
   const val=pwInput.value;
   if(!val) return;
+
   const hex=await sha256(val);
-  if(hex===PASSWORD_HASH) location.href=TARGET_URL;
-  else{
+  if(hex===PASSWORD_HASH){
+    location.href=TARGET_URL;
+  }else{
     msg.textContent="パスワードが違います。";
     pwInput.select();
   }
 }
 
-goBtn.addEventListener("click",check);
-pwInput.addEventListener("keydown",e=>{if(e.key==="Enter")check()});
+goBtn.addEventListener("click", check);
+pwInput.addEventListener("keydown", e=>{ if(e.key==="Enter") check(); });
 
 start();
 </script>
