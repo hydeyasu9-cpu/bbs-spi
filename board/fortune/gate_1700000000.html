@@ -11,120 +11,66 @@
   --panel:#ffffff;
   --line:#c9c9c9;
   --text:#111;
-  --muted:#555;
   --warn:#b00020;
   --btn:#efefef;
   --btnLine:#9a9a9a;
   --fade:260ms;
 }
-
-html,body{
-  height:100%;
-  margin:0;
-}
-
+html,body{height:100%;margin:0;}
 body{
   background:var(--bg);
   color:var(--text);
   font-family: ui-monospace, Menlo, Consolas, "MS Gothic", monospace;
-  display:flex;
-  justify-content:center;
-  align-items:center;
+  display:flex; justify-content:center; align-items:center;
 }
-
-/* 中央固定 */
-.wrap{
-  width:min(900px, 95%);
-}
-
+.wrap{ width:min(900px,95%); }
 .hidden{ display:none !important; }
 
-.panel{
-  border:1px solid var(--line);
-  background:var(--panel);
-}
+.panel{ border:1px solid var(--line); background:var(--panel); }
+.panel-hd{ padding:8px 12px; border-bottom:1px solid var(--line); background:#fafafa; font-weight:700; }
+.panel-bd{ padding:16px; }
 
-.panel-hd{
-  padding:8px 12px;
-  border-bottom:1px solid var(--line);
-  background:#fafafa;
-  font-weight:700;
-}
+.row{ display:flex; gap:8px; margin-top:16px; }
+input{ flex:1; border:1px solid var(--line); padding:8px; font-size:14px; }
+.go{ border:1px solid var(--btnLine); background:var(--btn); padding:8px 14px; cursor:pointer; }
+.locked{ opacity:.5; pointer-events:none; }
+.msg{ margin-top:10px; color:var(--warn); font-size:13px; }
 
-.panel-bd{
-  padding:16px;
-}
+.stage{ display:none; width:100%; }
+.stage.show{ display:block; }
 
-.notice .desc{
-  margin-top:8px;
-  font-size:14px;
-  color:var(--muted);
-}
+.stage-inner{ position:relative; }
+video{ width:100%; max-height:80vh; background:#000; }
 
-.row{
+/* 音ONボタン */
+.soundOverlay{
+  position:absolute;
+  inset:0;
   display:flex;
-  gap:8px;
-  margin-top:16px;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,.35);
 }
-
-input{
-  flex:1;
-  border:1px solid var(--line);
-  padding:8px;
-  font-size:14px;
-}
-
-.go{
+.soundOverlay.hidden{ display:none; }
+.soundBtn{
   border:1px solid var(--btnLine);
   background:var(--btn);
-  padding:8px 14px;
+  padding:10px 14px;
+  font-weight:700;
   cursor:pointer;
 }
 
-.locked{
-  opacity:.5;
-  pointer-events:none;
-}
-
-.msg{
-  margin-top:10px;
-  color:var(--warn);
-  font-size:13px;
-}
-
-.stage{
-  display:none;
-  width:100%;
-}
-
-.stage.show{
-  display:block;
-}
-
-video{
-  width:100%;
-  max-height:80vh;
-  background:#000;
-}
-
 .blackout{
-  position:fixed;
-  inset:0;
-  background:#000;
-  opacity:0;
-  pointer-events:none;
+  position:fixed; inset:0; background:#000;
+  opacity:0; pointer-events:none;
   transition:opacity var(--fade) ease;
   z-index:9999;
 }
-.blackout.show{
-  opacity:1;
-  pointer-events:auto;
-}
+.blackout.show{ opacity:1; pointer-events:auto; }
 </style>
 </head>
 
 <body>
-
 <div class="blackout" id="blackout"></div>
 
 <div class="wrap">
@@ -146,9 +92,17 @@ video{
 
   <!-- 動画 -->
   <div class="stage" id="videoStage">
-    <video id="introVideo" autoplay muted playsinline preload="auto">
-      <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
-    </video>
+    <div class="stage-inner">
+      <!-- 自動再生を通すため最初は muted -->
+      <video id="introVideo" autoplay muted playsinline preload="auto">
+        <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
+      </video>
+
+      <!-- 1タップで音を出す -->
+      <div class="soundOverlay" id="soundOverlay">
+        <button class="soundBtn" id="soundBtn">🔊 音を出す</button>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -166,8 +120,11 @@ const pwRow=document.getElementById("pwRow");
 const pwInput=document.getElementById("pwInput");
 const goBtn=document.getElementById("goBtn");
 const msg=document.getElementById("msg");
+
 const videoStage=document.getElementById("videoStage");
 const video=document.getElementById("introVideo");
+const soundOverlay=document.getElementById("soundOverlay");
+const soundBtn=document.getElementById("soundBtn");
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
@@ -187,10 +144,26 @@ async function start(){
   pwScreen.classList.add("hidden");
   videoStage.classList.add("show");
 
+  // ここで自動再生（muted）を確実に開始
   video.play().catch(()=>{});
 
   await blackoutOff();
 }
+
+// 音を出す（ユーザー操作）
+async function enableSound(){
+  try{
+    video.muted = false;
+    video.volume = 1.0;
+    await video.play();
+    soundOverlay.classList.add("hidden");
+  }catch(e){
+    // 失敗してもボタン残す
+  }
+}
+soundBtn.addEventListener("click", enableSound);
+// スマホで押しやすいように背景クリックでも有効化
+soundOverlay.addEventListener("click", (e)=>{ if(e.target === soundOverlay) enableSound(); });
 
 video.addEventListener("ended", async ()=>{
   blackoutOn();
