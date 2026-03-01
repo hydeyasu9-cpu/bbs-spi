@@ -5,108 +5,163 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Access</title>
 <style>
+/* ===== 2ch-ish base ===== */
 :root{
-  --bg:#000;
-  --panel:rgba(255,255,255,.06);
-  --line:rgba(255,255,255,.14);
-  --warn:#ffb74d;
-  --accent:#2b90ff;
+  --bg:#f6f6f6;
+  --panel:#ffffff;
+  --line:#c9c9c9;
+  --text:#111;
+  --muted:#555;
+  --link:#0645ad;
+  --warn:#b00020;
+  --btn:#efefef;
+  --btnText:#111;
+  --btnLine:#9a9a9a;
   --fade:260ms;
 }
+
+html,body{ height:100%; }
 body{
   margin:0;
   background:var(--bg);
-  color:#fff;
-  font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-.wrap{
-  width:min(920px,100%);
-  padding:18px;
-  box-sizing:border-box;
+  color:var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "MS Gothic", "ＭＳ ゴシック", monospace;
+  line-height:1.55;
 }
 
-/* パスワード画面 */
-.pw-screen{
-  border-radius:16px;
+/* 中央寄せじゃなく、掲示板っぽく上に置く */
+.wrap{
+  width:min(980px, calc(100% - 24px));
+  margin:16px auto;
+}
+
+.header{
   border:1px solid var(--line);
   background:var(--panel);
-  padding:18px;
+  padding:10px 12px;
 }
-.pw-screen.hidden{ display:none; }
+.header .site{
+  font-weight:700;
+}
+.header .meta{
+  color:var(--muted);
+  font-size:12px;
+  margin-top:2px;
+}
 
+.panel{
+  margin-top:10px;
+  border:1px solid var(--line);
+  background:var(--panel);
+}
+
+.panel-hd{
+  padding:8px 12px;
+  border-bottom:1px solid var(--line);
+  background:#fafafa;
+  font-weight:700;
+}
+.panel-bd{
+  padding:12px;
+}
+
+.notice{
+  font-size:13px;
+  color:var(--text);
+}
+.notice .title{
+  font-weight:700;
+}
+.notice .desc{
+  margin-top:6px;
+  color:var(--muted);
+}
+
+/* パスワード入力 */
 .row{
   display:flex;
-  gap:10px;
-}
-input{
-  flex:1;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(0,0,0,.35);
-  color:#fff;
-  padding:14px;
-  font-size:16px;
-}
-.go{
-  border:none;
-  border-radius:14px;
-  padding:14px 16px;
-  font-weight:900;
-  background:#00c853;
-  color:#06230f;
-}
-.locked{
-  opacity:.4;
-  pointer-events:none;
-}
-.msg{
+  gap:8px;
+  align-items:center;
   margin-top:10px;
-  font-size:13px;
-  color:var(--warn);
+  flex-wrap:wrap;
 }
 
-/* 動画 */
+input{
+  flex:1;
+  min-width:220px;
+  border:1px solid var(--line);
+  background:#fff;
+  color:var(--text);
+  padding:8px 10px;
+  font-size:14px;
+  border-radius:2px; /* 角丸しない */
+}
+
+.go{
+  border:1px solid var(--btnLine);
+  background:var(--btn);
+  color:var(--btnText);
+  padding:8px 12px;
+  font-size:14px;
+  border-radius:2px;
+  cursor:pointer;
+}
+.go:active{ transform:translateY(1px); }
+
+.locked{
+  opacity:.45;
+  pointer-events:none;
+}
+
+.msg{
+  margin-top:8px;
+  font-size:13px;
+  color:var(--warn);
+  min-height:1.2em;
+}
+
+/* 動画ステージ */
 .stage{
   display:none;
-  margin-top:12px;
-  border-radius:16px;
-  overflow:hidden;
+  margin-top:10px;
   border:1px solid var(--line);
+  background:var(--panel);
 }
 .stage.show{ display:block; }
 
+.stage-inner{
+  position:relative;
+}
+
 video{
   width:100%;
-  max-height:80vh;
+  max-height:75vh;
   background:#000;
 }
 
-/* 再生ボタン */
+/* 再生オーバーレイ（2chっぽく簡素に） */
 .overlay{
   position:absolute;
   inset:0;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:rgba(0,0,0,.75);
+  background:rgba(255,255,255,.85);
 }
 .overlay.hidden{ display:none; }
 
 .btn{
-  border:none;
-  border-radius:14px;
-  padding:14px 18px;
-  font-size:16px;
-  font-weight:900;
-  background:var(--accent);
-  color:#071a2f;
+  border:1px solid var(--btnLine);
+  border-radius:2px;
+  padding:10px 14px;
+  font-size:14px;
+  font-weight:700;
+  background:var(--btn);
+  color:var(--btnText);
+  cursor:pointer;
 }
 
-/* ブラックアウト */
+/* ブラックアウト（演出は維持） */
 .blackout{
   position:fixed;
   inset:0;
@@ -120,6 +175,11 @@ video{
   opacity:1;
   pointer-events:auto;
 }
+
+/* 2chっぽい小ネタ */
+.a{ color:var(--link); text-decoration:underline; cursor:pointer; }
+.hr{ border-top:1px solid var(--line); margin:10px 0; }
+.small{ font-size:12px; color:var(--muted); }
 </style>
 </head>
 <body>
@@ -128,22 +188,45 @@ video{
 
 <div class="wrap">
 
+  <div class="header">
+    <div class="site">なんでも実況J（仮）</div>
+    <div class="meta">※この画面は演出用です / ﾏﾀｰﾘ進行</div>
+  </div>
+
   <!-- 初期：パスワード画面のみ -->
-  <div class="pw-screen" id="pwScreen">
-    <div class="row locked" id="pwRow">
-      <input id="pwInput" type="password" placeholder="パスワード">
-      <button class="go" id="goBtn">進む</button>
+  <div class="panel pw-screen" id="pwScreen">
+    <div class="panel-hd">Access</div>
+    <div class="panel-bd">
+      <div class="notice">
+        <div class="title">パスワード入力</div>
+        <div class="desc">
+          「ワイ氏、超絶大凶と占われるも無事にラッキーアイテムを手に入れて無双www」のスレを閲覧するためにはパスワードを入力してください。
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="row locked" id="pwRow">
+        <input id="pwInput" type="password" placeholder="パスワード">
+        <button class="go" id="goBtn">OK</button>
+        <span class="small">（Enterでも可）</span>
+      </div>
+
+      <div class="msg" id="msg"></div>
+      <div class="small">ヒント：半角数字4桁</div>
     </div>
-    <div class="msg" id="msg"></div>
   </div>
 
   <!-- 動画 -->
   <div class="stage" id="videoStage">
-    <video id="introVideo" playsinline preload="auto">
-      <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
-    </video>
-    <div class="overlay hidden" id="playOverlay">
-      <button class="btn" id="playBtn">▶ 再生</button>
+    <div class="panel-hd">スレ読み込み中…</div>
+    <div class="stage-inner">
+      <video id="introVideo" playsinline preload="auto">
+        <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
+      </video>
+      <div class="overlay hidden" id="playOverlay">
+        <button class="btn" id="playBtn">▶ 再生</button>
+      </div>
     </div>
   </div>
 
@@ -224,7 +307,10 @@ async function check(){
   if(!val) return;
   const hex=await sha256(val);
   if(hex===PASSWORD_HASH) location.href=TARGET_URL;
-  else{msg.textContent="×";pwInput.select();}
+  else{
+    msg.textContent="パスワードが違います。";
+    pwInput.select();
+  }
 }
 
 goBtn.addEventListener("click",check);
