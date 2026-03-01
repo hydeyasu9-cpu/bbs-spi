@@ -4,42 +4,42 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Access</title>
+
 <style>
-/* ===== 2ch-ish base ===== */
 :root{
   --bg:#f6f6f6;
   --panel:#ffffff;
   --line:#c9c9c9;
   --text:#111;
   --muted:#555;
-  --link:#0645ad;
   --warn:#b00020;
   --btn:#efefef;
-  --btnText:#111;
   --btnLine:#9a9a9a;
   --fade:260ms;
 }
 
-html,body{ height:100%; }
-body{
+html,body{
+  height:100%;
   margin:0;
+}
+
+body{
   background:var(--bg);
   color:var(--text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "MS Gothic", "ＭＳ ゴシック", monospace;
-  line-height:1.55;
+  font-family: ui-monospace, Menlo, Consolas, "MS Gothic", monospace;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
 
-/* 中央寄せじゃなく、掲示板っぽく上に置く */
+/* 中央固定 */
 .wrap{
-  width:min(980px, calc(100% - 24px));
-  margin:16px auto;
+  width:min(900px, 95%);
 }
 
-/* 汎用：完全非表示（動画中にPWを消すのに使う） */
 .hidden{ display:none !important; }
 
 .panel{
-  margin-top:10px;
   border:1px solid var(--line);
   background:var(--panel);
 }
@@ -50,110 +50,63 @@ body{
   background:#fafafa;
   font-weight:700;
 }
+
 .panel-bd{
-  padding:12px;
+  padding:16px;
 }
 
-.notice{
-  font-size:13px;
-  color:var(--text);
-}
-.notice .title{
-  font-weight:700;
-}
 .notice .desc{
-  margin-top:6px;
+  margin-top:8px;
+  font-size:14px;
   color:var(--muted);
 }
 
-/* パスワード入力 */
 .row{
   display:flex;
   gap:8px;
-  align-items:center;
-  margin-top:10px;
-  flex-wrap:wrap;
+  margin-top:16px;
 }
 
 input{
   flex:1;
-  min-width:220px;
   border:1px solid var(--line);
-  background:#fff;
-  color:var(--text);
-  padding:8px 10px;
+  padding:8px;
   font-size:14px;
-  border-radius:2px; /* 角丸しない */
 }
 
 .go{
   border:1px solid var(--btnLine);
   background:var(--btn);
-  color:var(--btnText);
-  padding:8px 12px;
-  font-size:14px;
-  border-radius:2px;
+  padding:8px 14px;
   cursor:pointer;
 }
-.go:active{ transform:translateY(1px); }
 
 .locked{
-  opacity:.45;
+  opacity:.5;
   pointer-events:none;
 }
 
 .msg{
-  margin-top:8px;
-  font-size:13px;
+  margin-top:10px;
   color:var(--warn);
-  min-height:1.2em;
+  font-size:13px;
 }
 
-/* 動画ステージ */
 .stage{
   display:none;
-  margin-top:10px;
-  border:1px solid var(--line);
-  background:var(--panel);
+  width:100%;
 }
-.stage.show{ display:block; }
 
-.stage-inner{
-  position:relative;
+.stage.show{
+  display:block;
 }
 
 video{
   width:100%;
-  max-height:75vh;
+  max-height:80vh;
   background:#000;
 }
 
-/* 再生オーバーレイ（簡素） */
-.overlay{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:rgba(255,255,255,.85);
-}
-.overlay.hidden{ display:none; }
-
-.btn{
-  border:1px solid var(--btnLine);
-  border-radius:2px;
-  padding:10px 14px;
-  font-size:14px;
-  font-weight:700;
-  background:var(--btn);
-  color:var(--btnText);
-  cursor:pointer;
-}
-
-.hr{ border-top:1px solid var(--line); margin:10px 0; }
-.small{ font-size:12px; color:var(--muted); }
-
-/* ブラックアウト（演出は維持） */
 .blackout{
   position:fixed;
   inset:0;
@@ -169,29 +122,22 @@ video{
 }
 </style>
 </head>
+
 <body>
 
 <div class="blackout" id="blackout"></div>
 
 <div class="wrap">
 
-  <!-- 初期：パスワード画面のみ -->
-  <div class="panel pw-screen" id="pwScreen">
+  <!-- パスワード画面 -->
+  <div class="panel" id="pwScreen">
     <div class="panel-hd">Access</div>
     <div class="panel-bd">
-      <div class="notice">
-        <div class="title">入力</div>
-        <div class="desc">
-          「ワイ氏、超絶大凶と占われるも無事にラッキーアイテムを手に入れて無双www」のスレを閲覧するためにはパスワードを入力してください。
-        </div>
-      </div>
-
-      <div class="hr"></div>
+      「ワイ氏、超絶大凶と占われるも無事にラッキーアイテムを手に入れて無双www」のスレを閲覧するためにはパスワードを入力してください。
 
       <div class="row locked" id="pwRow">
         <input id="pwInput" type="password" placeholder="パスワード">
         <button class="go" id="goBtn">OK</button>
-        <span class="small">（Enterでも可）</span>
       </div>
 
       <div class="msg" id="msg"></div>
@@ -200,15 +146,9 @@ video{
 
   <!-- 動画 -->
   <div class="stage" id="videoStage">
-    <div class="panel-hd"></div>
-    <div class="stage-inner">
-      <video id="introVideo" playsinline preload="auto">
-        <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
-      </video>
-      <div class="overlay hidden" id="playOverlay">
-        <button class="btn" id="playBtn">▶ 再生</button>
-      </div>
-    </div>
+    <video id="introVideo" autoplay muted playsinline preload="auto">
+      <source src="../../assets/intro_1700000000.mp4" type="video/mp4">
+    </video>
   </div>
 
 </div>
@@ -226,11 +166,8 @@ const pwRow=document.getElementById("pwRow");
 const pwInput=document.getElementById("pwInput");
 const goBtn=document.getElementById("goBtn");
 const msg=document.getElementById("msg");
-
 const videoStage=document.getElementById("videoStage");
 const video=document.getElementById("introVideo");
-const overlay=document.getElementById("playOverlay");
-const playBtn=document.getElementById("playBtn");
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
@@ -247,23 +184,13 @@ async function start(){
   blackoutOn();
   await sleep(BLACKOUT_TIME);
 
-  // 動画開始時：PW画面は完全に消す（同居させない）
   pwScreen.classList.add("hidden");
   videoStage.classList.add("show");
 
-  try{
-    await video.play();
-  }catch(e){
-    overlay.classList.remove("hidden");
-  }
+  video.play().catch(()=>{});
 
   await blackoutOff();
 }
-
-playBtn.addEventListener("click", async ()=>{
-  overlay.classList.add("hidden");
-  await video.play();
-});
 
 video.addEventListener("ended", async ()=>{
   blackoutOn();
@@ -297,8 +224,8 @@ async function check(){
   }
 }
 
-goBtn.addEventListener("click", check);
-pwInput.addEventListener("keydown", e=>{ if(e.key==="Enter") check(); });
+goBtn.addEventListener("click",check);
+pwInput.addEventListener("keydown",e=>{ if(e.key==="Enter") check(); });
 
 start();
 </script>
